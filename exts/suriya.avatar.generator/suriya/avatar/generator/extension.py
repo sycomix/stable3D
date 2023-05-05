@@ -1,5 +1,7 @@
 import omni.ext
 import omni.ui as ui
+import omni.kit.commands
+import carb
 import torch
 from diffusers import StableDiffusionPipeline
 
@@ -12,53 +14,36 @@ def some_public_function(x: int):
 # Any class derived from `omni.ext.IExt` in top level module (defined in `python.modules` of `extension.toml`) will be
 # instantiated when extension gets enabled and `on_startup(ext_id)` will be called. Later when extension gets disabled
 # on_shutdown() is called.
-class SuriyaAvatarGeneratorExtension(omni.ext.IExt):
+class SuriyaSpanCubeExtension(omni.ext.IExt):
     # ext_id is current extension id. It can be used with extension manager to query additional information, like where
     # this extension is located on filesystem.
     def on_startup(self, ext_id):
         print("[suriya.avatar.generator] suriya avatar generator startup")
 
-        self._count = 0
-        self.textPrompt = ui.SimpleStringModel()
+        self.prompt = ui.SimpleStringModel()
 
-        self._window = ui.Window("My Window", width=300, height=300)
+        self._window = ui.Window("Stable3D", width=300, height=300)
         with self._window.frame:
-            #with ui.VStack():
+            with ui.VStack():
                 #label = ui.Label("")
+                ui.StringField(model=self.prompt)
 
-
-                def on_click():
-                    self._count += 1
-                    label.text = f"count: {self._count}"
-
-                def on_reset():
-                    self._count = 0
-                    label.text = "empty"
-
-                def genereate_image(prompt):
+                def generateImage():
+                    carb.log_info("Stable Diffusion Stage")
+                    print("creating image with prompt: "+self.prompt.as_string)
                     pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4", revision="fp16", torch_dtype=torch.float16)
                     pipe.to("cuda")
                     #prompt = "a photograph of an astronaut riding a horse"
-                    print(prompt)
+                    prompt = self.prompt.as_string
                     image = pipe(prompt).images[0]
                     # you can save the image with
                     image.save("D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\stableDiffusionImage.png")
                     print("image created")
-                    loadImage()
+                    #shutil.copy("D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\stableDiffusionImage.png",
+                    #            "D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\stableDiffusionImageDefault.png")
 
-                with ui.ScrollingFrame():
-                    with ui.VStack():
-                        #ui.Button("Add", clicked_fn=on_click)
-                        ui.StringField(self.textPrompt)
-                        
-                        def loadImage():
-                            print("loading image")
-                            with ui.HStack(height=ui.Percent(50)):
-                                ui.Image("D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\stableDiffusionImage.png")
-                        
-                        with ui.HStack(height=30):    
-                            ui.Button("Generate", clicked_fn=genereate_image(str(self.textPrompt)))
-                            ui.Button("Reload", clicked_fn=loadImage())
+                with ui.HStack():
+                    ui.Button("Generate", clicked_fn=generateImage)
 
     def on_shutdown(self):
         print("[suriya.avatar.generator] suriya avatar generator shutdown")
