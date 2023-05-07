@@ -1,7 +1,7 @@
 #import omni.ext
 import omni.ui as ui
 import asyncio
-from .stablediffusion import generateTextToImage, generateImageToImage
+from .stablediffusion import generateTextToImage, generateImageToImage, generateDepthToImage
 from .widgets import ProgressBar
 
 class AvatarWindow(ui.Window):
@@ -18,7 +18,10 @@ class AvatarWindow(ui.Window):
     
     def _generateI(self):
         run_loop = asyncio.get_event_loop()
-        run_loop.create_task(generateImageToImage2(self.progress, self.stableImage, self.prompt.as_string, self.inputImage.source_url))
+        run_loop.create_task(generateImageToImage(self.progress, self.stableImage, self.prompt.as_string, self.inputImage.source_url))
+    
+    def _generateD(self):
+        generateDepthToImage(self.progress, self.stableImage, self.prompt.as_string, self.inputImage.source_url)
 
     #-------------------------Drag and Drop Functions----------------------------
     def drop_accept(self, url):
@@ -57,6 +60,8 @@ class AvatarWindow(ui.Window):
                 with ui.HStack(height=0):
                     ui.Button("Generate", clicked_fn=self._generate)
                     ui.Button("Generate+I", clicked_fn=self._generateI)
+                    ui.Button("Generate+D", clicked_fn=self._generateD)
+
                 self.progress = ProgressBar()
                 with ui.HStack():
                     self.stableImage = ui.Image()
