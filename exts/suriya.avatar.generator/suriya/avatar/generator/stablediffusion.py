@@ -3,12 +3,6 @@ import torch
 import asyncio
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline
 from PIL import Image
-import jax
-import numpy as np
-import jax.numpy as jnp
-from flax.jax_utils import replicate
-from flax.training.common_utils import shard
-from diffusers import FlaxStableDiffusionImg2ImgPipeline
 
 async def generateTextToImage(progress_widget, outputImage_widget, image_prompt: str):
     carb.log_info("Stable Diffusion Stage: Text to Image")
@@ -63,46 +57,3 @@ async def generateImageToImage(progress_widget, outputImage_widget, image_prompt
         # todo bug fix: reload image if same prompt
         outputImage_widget.source_url = image_url
         progress_widget.show_bar(False)
-
-def create_key(seed=0):
-    return jax.random.PRNGKey(seed)
-
-def generateImageToImage2(progress_widget, outputImage_widget, image_prompt: str, inputImageUrl):
-        rng = create_key(0)
-
-        init_img = Image.open(inputImageUrl).convert("RGB")
-        init_img = init_img.resize((768, 512))
-
-        prompts = image_prompt
-
-        pipeline, params = FlaxStableDiffusionImg2ImgPipeline.from_pretrained(
-            "CompVis/stable-diffusion-v1-4",
-            revision="flax",
-            dtype=jnp.bfloat16,
-        )
-
-        num_samples = jax.device_count()
-        rng = jax.random.split(rng, jax.device_count())
-        prompt_ids, processed_image = pipeline.prepare_inputs(
-            prompt=[prompts] * num_samples, image=[init_img] * num_samples
-        )
-        p_params = replicate(params)
-        prompt_ids = shard(prompt_ids)
-        processed_image = shard(processed_image)
-
-        output = pipeline(
-            prompt_ids=prompt_ids,
-            image=processed_image,
-            params=p_params,
-            prng_seed=rng,
-            strength=0.75,
-            num_inference_steps=50,
-            jit=True,
-            height=512,
-            width=768,
-        ).images
-
-        output_image = pipeline.numpy_to_pil(np.asarray(output.reshape((num_samples,) + output.shape[-3:])))[0]
-        image_url = "D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\"+image_prompt.replace(" ", "")+".png"
-        output_image.save(image_url)
-        print("image created")
