@@ -1,4 +1,3 @@
-# Python Extension Example [suriya.avatar.generator]
+# Stable3D Extension [suriya.avatar.generator]
 
-This is an example of pure python Kit extension. It is intended to be copied and serve as a template to create new extensions.
-
+This is a simple python extension for nvidia omniverse which uses stable diffusion to generate realistic and artistic 3D avatars
