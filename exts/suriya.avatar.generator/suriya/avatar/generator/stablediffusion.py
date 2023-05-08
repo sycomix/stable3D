@@ -77,3 +77,40 @@ def generateDepthToImage(progress_widget, outputImage_widget, image_prompt: str,
     image.save(image_url)
     print("image created")
     outputImage_widget.source_url = image_url
+    progress_widget.show_bar(False)
+
+from diffusers.utils import load_image
+import cv2
+import numpy as np
+from diffusers import StableDiffusionControlNetPipeline, ControlNetModel, UniPCMultistepScheduler
+def generateControlNetImage(progress_widget, outputImage_widget, image_prompt: str, inputImageUrl):
+    image = load_image(inputImageUrl)
+    image = image.resize((1148, 1494))
+    image = np.array(image)
+
+    low_threshold = 100
+    high_threshold = 200
+
+    image = cv2.Canny(image, low_threshold, high_threshold)
+    image = image[:, :, None]
+    image = np.concatenate([image, image, image], axis=2)
+
+    prompt = image_prompt + ", best quality, extremely detailed"
+
+    canny_image = Image.fromarray(image)
+    canny_image.save("D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\"+prompt.replace(" ", "")+"canny.png")
+
+    controlNet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-canny", torch_dtype=torch.float16)
+    pipe = StableDiffusionControlNetPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", 
+                                                             controlnet=controlNet, torch_dtype=torch.float16)
+    pipe.scheduler = UniPCMultistepScheduler.from_config(pipe.scheduler.config)
+
+    pipe.enable_model_cpu_offload()
+    pipe.enable_xformers_memory_efficient_attention()
+
+    output = pipe(prompt, canny_image, negative_prompt="monochrome, lowres, bad anatomy, worst quality, low quality", 
+                  num_inference_steps=20, generator=torch.Generator(device="cpu").manual_seed(2)).images[0]
+
+    image_url = "D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\"+prompt.replace(" ", "")+".png"
+    output.save(image_url)
+
