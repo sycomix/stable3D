@@ -44,14 +44,14 @@ async def generateImageToImage(progress_widget, outputImage_widget, image_prompt
         pipe = StableDiffusionImg2ImgPipeline.from_pretrained(model_id, revision="fp16", torch_dtype=torch.float16)
         #optimizations
         pipe.enable_model_cpu_offload()
-        pipe.enable_attention_slicing(1)
+        #pipe.enable_attention_slicing(1)
         #pipe.to("cuda")
         #pipe.enable_vae_tiling()
-        #pipe.enable_xformers_memory_efficient_attention()
+        pipe.enable_xformers_memory_efficient_attention()
 
         init_image = Image.open(inputImageUrl).convert("RGB")
-        init_image = init_image.resize((768, 512))
-        image = pipe(prompt=image_prompt, image=init_image, strength=0.3, guidance_scale=7.5, num_inference_steps=20).images[0]
+        init_image = init_image.resize((1148, 1494))
+        image = pipe(prompt=image_prompt, image=init_image, strength=0.7, guidance_scale=7.5, num_inference_steps=20).images[0]
 
         image_url = "D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\"+image_prompt.replace(" ", "")+".png"
         image.save(image_url)
@@ -113,4 +113,7 @@ def generateControlNetImage(progress_widget, outputImage_widget, image_prompt: s
 
     image_url = "D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\"+prompt.replace(" ", "")+".png"
     output.save(image_url)
+    print("image created")
+    outputImage_widget.source_url = image_url
+    progress_widget.show_bar(False)
 
