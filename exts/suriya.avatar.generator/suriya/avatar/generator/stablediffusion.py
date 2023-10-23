@@ -7,12 +7,12 @@ from PIL import Image
 async def generateTextToImage(progress_widget, outputImage_widget, image_prompt: str):
     carb.log_info("Stable Diffusion Stage: Text to Image")
 
-    if (len(image_prompt) != 0):
+    if image_prompt != "":
         run_loop = asyncio.get_event_loop()
         progress_widget.show_bar(True)
         task = run_loop.create_task(progress_widget.play_anim_forever())
 
-        print("creating image with prompt: "+image_prompt)
+        print(f"creating image with prompt: {image_prompt}")
         model_id  = "runwayml/stable-diffusion-v1-5"
         #model_id = "CompVis/stable-diffusion-v1-4"
         pipe = StableDiffusionPipeline.from_pretrained(model_id, revision="fp16", torch_dtype=torch.float16)
@@ -33,12 +33,12 @@ async def generateTextToImage(progress_widget, outputImage_widget, image_prompt:
 async def generateImageToImage(progress_widget, outputImage_widget, image_prompt: str, inputImageUrl):
     carb.log_info("Stable Diffusion Stage: Image to Image")
 
-    if (len(image_prompt) != 0):
+    if image_prompt != "":
         run_loop = asyncio.get_event_loop()
         progress_widget.show_bar(True)
         task = run_loop.create_task(progress_widget.play_anim_forever())
 
-        print("creating image with prompt+image: "+image_prompt)
+        print(f"creating image with prompt+image: {image_prompt}")
         model_id  = "runwayml/stable-diffusion-v1-5"
         #model_id = "CompVis/stable-diffusion-v1-4"
         pipe = StableDiffusionImg2ImgPipeline.from_pretrained(model_id, revision="fp16", torch_dtype=torch.float16)
@@ -95,7 +95,7 @@ def generateControlNetImage(progress_widget, outputImage_widget, image_prompt: s
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
 
-    prompt = image_prompt + ", best quality, extremely detailed"
+    prompt = f"{image_prompt}, best quality, extremely detailed"
 
     canny_image = Image.fromarray(image)
     canny_image.save("D:\\CG_Source\\Omniverse\\Extensions\\3DAvatarExtensionPOC\\stable3D\\"+prompt.replace(" ", "")+"canny.png")

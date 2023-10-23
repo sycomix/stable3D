@@ -37,7 +37,7 @@ class TemporaryDirectory:
 
 
 def install_package(package_src_path, package_dst_path):
-    with zipfile.ZipFile(package_src_path, allowZip64=True) as zip_file, TemporaryDirectory() as temp_dir:
+    with (zipfile.ZipFile(package_src_path, allowZip64=True) as zip_file, TemporaryDirectory() as temp_dir):
         zip_file.extractall(temp_dir)
         # Recursively copy (temp_dir will be automatically cleaned up on exit)
         try:
@@ -45,9 +45,11 @@ def install_package(package_src_path, package_dst_path):
             # target directory:
             shutil.copytree(temp_dir, package_dst_path)
         except OSError as exc:
-            logger.warning("Directory %s already present, packaged installation aborted" % package_dst_path)
+            logger.warning(
+                f"Directory {package_dst_path} already present, packaged installation aborted"
+            )
         else:
-            logger.info("Package successfully installed to %s" % package_dst_path)
+            logger.info(f"Package successfully installed to {package_dst_path}")
 
 
 install_package(sys.argv[1], sys.argv[2])

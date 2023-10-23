@@ -17,8 +17,7 @@ def find_omniverse_apps():
 
     apps = {}
     for x in json.loads(r.data.decode("utf-8")):
-        latest = x.get("installedVersions", {}).get("latest", "")
-        if latest:
+        if latest := x.get("installedVersions", {}).get("latest", ""):
             for s in x.get("settings", []):
                 if s.get("version", "") == latest:
                     root = s.get("launch", {}).get("root", "")
